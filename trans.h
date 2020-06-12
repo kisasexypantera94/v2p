@@ -1,27 +1,13 @@
 #pragma once
 
-#define LEGACY  2
-#define PAE     3
+#include <stdint.h>
 
-#define PAGE_SHIFT      12
-#define PAGE_SIZE       (1UL << PAGE_SHIFT)
-#define PAGE_MASK       (~(PAGE_SIZE-1))
-
-#define LINEAR_SIZE     (1UL << (PAGE_SHIFT + 10))
-
-/* PMD_SHIFT determines the size of the area a second-level page table can map */
-#define PMD_SHIFT    (PAGE_SHIFT + (PAGE_SHIFT-3))
-#define PMD_SIZE     (1UL << PMD_SHIFT)
-#define PMD_MASK     (~(PMD_SIZE-1))
-
-/* PGDIR_SHIFT determines what a third-level page table entry can map */
-#define PGDIR_SHIFT    (PAGE_SHIFT + 2*(PAGE_SHIFT-3))
-#define PGDIR_SIZE     (1UL << PGDIR_SHIFT)
-#define PGDIR_MASK     (~(PGDIR_SIZE-1))
+#define LEGACY 2
+#define PAE    3
 
 // чтение указанного количества байт физической памяти по заданному адресу в указанный буфер
 // функция вернет количество прочианных байт (меньшее или 0 означает ошибку - выход за пределы памяти)
-typedef unsigned int (*PREAD_FUNC)(void *buf, const unsigned int size, const unsigned int physical_addr);
+typedef uint32_t (*PREAD_FUNC)(void *buf, const uint32_t size, const uint32_t physical_addr);
 
 // функция трансляции виртуального адреса в физический:
 //
@@ -32,9 +18,9 @@ typedef unsigned int (*PREAD_FUNC)(void *buf, const unsigned int size, const uns
 // функция возвращает успешность трансляции: 0 - успешно, не 0 - ошибки
 // phys_addr - выходной оттранслированный физический адрес
 int
-va2pa(unsigned int virt_addr,
-      unsigned int level,
-      unsigned int root_addr,
+va2pa(uint32_t virt_addr,
+      uint32_t level,
+      uint32_t root_addr,
       PREAD_FUNC read_func,
-      unsigned int *phys_addr);
+      uint32_t *phys_addr);
 

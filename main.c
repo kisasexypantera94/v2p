@@ -2,36 +2,34 @@
 
 #include "trans.h"
 
-void print_binary(unsigned int number) {
+void print_binary(uint32_t number) {
     if (number) {
         print_binary(number >> 1);
         putc((number & 1) ? '1' : '0', stdout);
     }
 }
 
-unsigned int
-get_mask(unsigned int l, unsigned int r) {
-    ++l;
-    unsigned int a = (1UL << r) - 1;
-    unsigned int b = r != 0 ? ~a : 0xffffffff;
-    unsigned int tmp = l != 1 ? (1UL << l) - 1 : 1;
-    return b & tmp;
-}
+//111010110111100110100010101
+//101110010110111111001001110001
+//101110010110111111000001110100
+//101110010110111111011011110000
+//101110010110111111110100010101
+//101110010110111111110100010101
+//101110010110111111110100010101
 
 int main() {
-    unsigned int cr3 = 777777777;
+    uint32_t linear = 123456789;
+    uint32_t cr3 = 777777777;
+    uint32_t phys = 0;
 
+    va2pa(linear, LEGACY, cr3, NULL, &phys);
+
+    print_binary(linear);
+    printf("\n");
     print_binary(cr3);
     printf("\n");
-    print_binary(cr3 & PAGE_MASK);
+    print_binary(phys);
     printf("\n");
-    print_binary((cr3 & PAGE_MASK) >> 2);
-    printf("\n");
-    print_binary((PAGE_MASK));
-    printf("\n");
-    print_binary(get_mask(31, 31));
-    printf("\n");
-    print_binary(1);
-    printf("\n");
+
     return 0;
 }
