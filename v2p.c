@@ -3,6 +3,7 @@
 #include "v2p.h"
 
 
+// One of the few situations when magic numbers are not bad IMO
 static const uint8_t DIRECTORY_SHIFT = 32;
 static const uint8_t TABLE_SHIFT = 22;
 static const uint8_t PAGE_SHIFT = 12;
@@ -21,6 +22,7 @@ comp_mask(const uint8_t l, const uint8_t r) {
     return a & b;
 }
 
+// CR3 -> PDE -> PTE -> PHYS (4KB pages)
 int
 va2pa_legacy(const uint32_t virt_addr,
              const uint32_t root_addr,
@@ -30,11 +32,11 @@ va2pa_legacy(const uint32_t virt_addr,
     uint32_t pde_addr = 0;
 
     // Bits 31:12 are from CR3
-    pde_addr |= comp_mask(DIRECTORY_SHIFT - 1, PAGE_SHIFT) & root_addr;
+    pde_addr |= comp_mask(31, 12) & root_addr;
 
     // Bits 11:2 are bits 31:22 of the linear address
-    uint32_t virt_for_pde = virt_addr & comp_mask(DIRECTORY_SHIFT - 1, TABLE_SHIFT);
-    pde_addr |= (virt_for_pde >> 20U) & comp_mask(PAGE_SHIFT - 1, 2);
+    uint32_t virt_for_pde = virt_addr & comp_mask(31, 22);
+    pde_addr |= (virt_for_pde >> 20U) & comp_mask(11, 2);
 
     uint32_t pde;
     if (read_func(&pde, sizeof(uint32_t), pde_addr) <= 0) {
@@ -47,11 +49,11 @@ va2pa_legacy(const uint32_t virt_addr,
     uint32_t pte_addr = 0;
 
     // Bits 31:12 are from the PDE
-    pte_addr |= pde & comp_mask(DIRECTORY_SHIFT - 1, PAGE_SHIFT);
+    pte_addr |= pde & comp_mask(31, 12);
 
     // Bits 11:2 are bits 21:12 of the linear address
-    uint32_t virt_for_pte = virt_addr & comp_mask(TABLE_SHIFT - 1, PAGE_SHIFT);
-    pte_addr |= (virt_for_pte >> 10U) & comp_mask(PAGE_SHIFT - 1, 2);
+    uint32_t virt_for_pte = virt_addr & comp_mask(21, 12);
+    pte_addr |= (virt_for_pte >> 10U) & comp_mask(11, 2);
 
     uint32_t pte;
     if (read_func(&pte, sizeof(uint32_t), pte_addr) <= 0) {
@@ -64,14 +66,16 @@ va2pa_legacy(const uint32_t virt_addr,
     *phys_addr = 0;
 
     // Bits 31:12 are from the PTE
-    *phys_addr |= pte & comp_mask(DIRECTORY_SHIFT - 1, PAGE_SHIFT);
+    *phys_addr |= pte & comp_mask(31, 12);
 
     // Bits 11:0 are from the original linear address
-    *phys_addr |= virt_addr & comp_mask(PAGE_SHIFT - 1, 0);
+    *phys_addr |= virt_addr & comp_mask(11, 0);
 
     return 0;
 }
 
+// CR3 -> PDPTE -> PDE -> PTE -> PHYS (4KB pages)
+// CR3 -> PDPTE -> PDE -> PHYS (2MB pages)
 int
 va2pa_pae(const uint32_t virt_addr,
           const uint32_t root_addr,
@@ -79,8 +83,9 @@ va2pa_pae(const uint32_t virt_addr,
           uint64_t *phys_addr) {
     //---------------------------------------------------------
     uint32_t pdpte_addr = 0;
+    // TODO: not sure, maybe I should add it with cr3
     // Bits 31:30 of the linear address select a PDPTE register
-    pdpte_addr |= virt_addr & comp_mask(DIRECTORY_SHIFT - 1, DIRECTORY_SHIFT - 2);
+    pdpte_addr |= virt_addr & comp_mask(31, 30);
 
     uint64_t pdpte;
     if (read_func(&pdpte, sizeof(uint64_t), pdpte_addr) <= 0) {
