@@ -2,11 +2,18 @@
 
 #include <stdint.h>
 
-static const uint8_t LEGACY = 2;
-static const uint8_t PAE = 3;
+enum PagingMode {
+    LEGACY = 2,
+    PAE = 3,
+};
+
+enum Exception {
+    PAGE_FAULT = -1,
+    READ_FAULT = -2,
+};
 
 // чтение указанного количества байт физической памяти по заданному адресу в указанный буфер
-// функция вернет количество прочианных байт (меньшее или 0 означает ошибку - выход за пределы памяти)
+// функция вернет количество прочитанных байт (меньшее или 0 означает ошибку - выход за пределы памяти)
 typedef uint32_t (*PREAD_FUNC)(void *buf, const uint32_t size, const uint32_t physical_addr);
 
 // функция трансляции виртуального адреса в физический:
@@ -22,5 +29,5 @@ va2pa(uint32_t virt_addr,
       uint32_t level,
       uint32_t root_addr,
       PREAD_FUNC read_func,
-      uint32_t *phys_addr);
+      uint64_t *phys_addr);
 
