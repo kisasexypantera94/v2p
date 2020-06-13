@@ -1,33 +1,11 @@
-#include <stdbool.h>
-
 #include "v2p.h"
-
+#include "utils.h"
 
 // One of the few situations when magic numbers are not bad IMO
 static const uint8_t DIRECTORY_SHIFT = 32;
 static const uint8_t TABLE_SHIFT = 22;
 static const uint8_t PAGE_SHIFT = 12;
 
-
-bool
-check_bit(const uint32_t x, const uint8_t N) {
-    return x & (1U << N);
-}
-
-
-uint64_t
-comp_mask(const uint8_t l, const uint8_t r) {
-    uint64_t a = r != 0 ? ~((1UL << r) - 1) : 0xffffffffffffffff;
-    uint64_t b;
-    if (l == 0) {
-        b = 0x1;
-    } else if (l == 63) {
-        b = 0xffffffffffffffff;
-    } else {
-        b = (1UL << (l + 1U)) - 1;
-    }
-    return a & b;
-}
 
 // CR3 -> PDE -> PTE -> PHYS (4KB pages)
 int

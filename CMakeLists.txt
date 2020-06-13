@@ -3,6 +3,6 @@ project(v2p C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_library(v2p v2p.c)
+add_library(v2p v2p.c utils.c)
 
 add_subdirectory(tests)

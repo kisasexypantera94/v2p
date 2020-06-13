@@ -2,7 +2,8 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "v2p.c"
+#include "v2p.h"
+#include "utils.h"
 
 bool
 test_get_mask() {
@@ -20,6 +21,7 @@ test_get_mask() {
             {31, 31, 0x80000000},
             {11, 2,  0xffc},
             {63, 0,  0xffffffffffffffff},
+            {63, 63, 0x8000000000000000},
             {60, 12, 0x1ffffffffffff000},
     };
     int n = sizeof(t) / sizeof(test_case);
@@ -38,7 +40,7 @@ test_get_mask() {
 
 uint32_t mock_read_func(void *buf, const uint32_t size, const uint64_t physical_addr) {
     // set present flag
-    uint32_t val = physical_addr | 1U;
+    uint64_t val = physical_addr | 1U;
     memcpy(buf, &val, size);
     return sizeof(physical_addr);
 }
@@ -61,10 +63,10 @@ test_va2pa() {
     bool ok = true;
     for (int i = 0; i < n; ++i) {
         uint64_t phys = 0;
-        va2pa_legacy(t[i].virt_addr, t[i].root_addr, t[i].read_func, &phys);
+        va2pa(t[i].virt_addr, t[i].level, t[i].root_addr, t[i].read_func, &phys);
         if (phys != t[i].want_phys) {
-            printf("error: for virt_addr=%u, root_addr=%u\ngot:  %llu\nwant: %llu\n\n",
-                   t[i].virt_addr, t[i].root_addr, phys, t[i].want_phys);
+            printf("error: for virt_addr=%u, root_addr=%u, level=%d\ngot:  %llu\nwant: %llu\n\n",
+                   t[i].virt_addr, t[i].root_addr, t[i].level, phys, t[i].want_phys);
             ok = false;
         }
     }
@@ -74,8 +76,8 @@ test_va2pa() {
 
 void print_binary(uint32_t number) {
     if (number) {
-        print_binary(number >> 1);
-        putc((number & 1) ? '1' : '0', stdout);
+        print_binary(number >> 1U);
+        putc((number & 1U) ? '1' : '0', stdout);
     }
 }
 
