@@ -14,7 +14,7 @@ enum Exception {
 
 // чтение указанного количества байт физической памяти по заданному адресу в указанный буфер
 // функция вернет количество прочитанных байт (меньшее или 0 означает ошибку - выход за пределы памяти)
-typedef uint32_t (*PREAD_FUNC)(void *buf, const uint32_t size, const uint32_t physical_addr);
+typedef uint32_t (*PREAD_FUNC)(void *buf, const uint32_t size, const uint64_t physical_addr);
 
 // функция трансляции виртуального адреса в физический:
 //

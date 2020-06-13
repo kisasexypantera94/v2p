@@ -36,7 +36,7 @@ test_get_mask() {
     return ok;
 }
 
-uint32_t mock_read_func(void *buf, const uint32_t size, const uint32_t physical_addr) {
+uint32_t mock_read_func(void *buf, const uint32_t size, const uint64_t physical_addr) {
     // set present flag
     uint32_t val = physical_addr | 1U;
     memcpy(buf, &val, size);
