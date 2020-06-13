@@ -17,8 +17,15 @@ check_bit(const uint32_t x, const uint8_t N) {
 
 uint64_t
 comp_mask(const uint8_t l, const uint8_t r) {
-    uint64_t a = r != 0 ? ~((1UL << r) - 1) : 0xffffffff;
-    uint64_t b = l != 0 ? (1UL << (l + 1U)) - 1 : 0x1;
+    uint64_t a = r != 0 ? ~((1UL << r) - 1) : 0xffffffffffffffff;
+    uint64_t b;
+    if (l == 0) {
+        b = 0x1;
+    } else if (l == 63) {
+        b = 0xffffffffffffffff;
+    } else {
+        b = (1UL << (l + 1U)) - 1;
+    }
     return a & b;
 }
 
@@ -169,7 +176,7 @@ va2pa(const uint32_t virt_addr,
         case LEGACY:
             return va2pa_legacy(virt_addr, root_addr, read_func, phys_addr);
         case PAE:
-            break;
+            return va2pa_pae(virt_addr, root_addr, read_func, phys_addr);
         default:
             break;
     }

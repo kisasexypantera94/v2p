@@ -9,7 +9,7 @@ test_get_mask() {
     typedef struct {
         uint8_t l;
         uint8_t r;
-        uint32_t want;
+        uint64_t want;
     } test_case;
 
     test_case t[] = {
@@ -19,14 +19,16 @@ test_get_mask() {
             {0,  0,  1},
             {31, 31, 0x80000000},
             {11, 2,  0xffc},
+            {63, 0,  0xffffffffffffffff},
+            {60, 12, 0x1ffffffffffff000},
     };
     int n = sizeof(t) / sizeof(test_case);
 
     bool ok = true;
     for (int i = 0; i < n; ++i) {
-        uint32_t got = comp_mask(t[i].l, t[i].r);
+        uint64_t got = comp_mask(t[i].l, t[i].r);
         if (got != t[i].want) {
-            printf("error: for l=%u, r=%u\ngot:  %u\nwant: %u\n\n", t[i].l, t[i].r, got, t[i].want);
+            printf("error: for l=%u, r=%u\ngot:  %llu\nwant: %llu\n\n", t[i].l, t[i].r, got, t[i].want);
             ok = false;
         }
     }
