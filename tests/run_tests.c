@@ -38,7 +38,8 @@ test_get_mask() {
     return ok;
 }
 
-uint32_t mock_read_func(void *buf, const uint32_t size, const uint64_t physical_addr) {
+uint32_t
+mock_read_func(void *buf, const uint32_t size, const uint64_t physical_addr) {
     // set present flag
     uint64_t val = physical_addr | 1U;
     memcpy(buf, &val, size);
@@ -49,24 +50,40 @@ bool
 test_va2pa() {
     typedef struct {
         uint32_t virt_addr;
-        uint8_t level;
-        uint32_t root_addr;
-        PREAD_FUNC read_func;
+        config_t cfg;
         uint64_t want_phys;
+        error_t want_err;
     } test_case;
 
     test_case t[] = {
-            {123456789, LEGACY, 777777777, mock_read_func, 0b101110010110111111110100010101},
+            {
+                    123456789,
+                    {
+                            LEGACY,
+                            777777777,
+                            mock_read_func,
+                            false,
+                            false,
+                            true,
+                    },
+                    0b101110010110111111110100010101,
+                    SUCCESS
+            },
     };
     int n = sizeof(t) / sizeof(test_case);
 
     bool ok = true;
     for (int i = 0; i < n; ++i) {
         uint64_t phys = 0;
-        va2pa(t[i].virt_addr, t[i].level, t[i].root_addr, t[i].read_func, &phys);
+        error_t err = va2pa(t[i].virt_addr, &t[i].cfg, &phys);
+        if (err != t[i].want_err) {
+            printf("wrong return code for virt_addr=%u, root_addr=%u, level=%d\ngot:  %d\nwant: %d\n\n",
+                   t[i].virt_addr, t[i].cfg.root_addr, t[i].cfg.level, err, t[i].want_err);
+            continue;
+        }
         if (phys != t[i].want_phys) {
-            printf("error: for virt_addr=%u, root_addr=%u, level=%d\ngot:  %llu\nwant: %llu\n\n",
-                   t[i].virt_addr, t[i].root_addr, t[i].level, phys, t[i].want_phys);
+            printf("wrong returned physaddr for virt_addr=%u, root_addr=%u, level=%d\ngot:  %llu\nwant: %llu\n\n",
+                   t[i].virt_addr, t[i].cfg.root_addr, t[i].cfg.level, phys, t[i].want_phys);
             ok = false;
         }
     }
@@ -74,14 +91,16 @@ test_va2pa() {
     return ok;
 }
 
-void print_binary(uint32_t number) {
+void
+print_binary(uint32_t number) {
     if (number) {
         print_binary(number >> 1U);
         putc((number & 1U) ? '1' : '0', stdout);
     }
 }
 
-int main() {
+int
+main() {
     bool ok = true;
     ok &= test_get_mask();
     ok &= test_va2pa();
