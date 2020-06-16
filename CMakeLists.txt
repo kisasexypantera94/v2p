@@ -3,7 +3,7 @@ project(v2p C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_library(v2p src/v2p.c src/utils.c)
+add_library(v2p src/v2p.c src/legacy.c src/pae.c src/utils.c)
 target_include_directories(
         v2p
 

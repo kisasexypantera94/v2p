@@ -17,11 +17,14 @@ typedef enum error {
     GENERAL_PROTECTION_EXCEPTION = -5,
 } error_t;
 
+// TODO: move to legacy.c/pae.c
 enum flags {
     // PDE
     P_PDE4KB = 0,
+    P_PDE2MB = 0,
     P_PDE4MB = 0,
     PS_PDE4KB = 7,
+    PS_PDE2MB = 7,
     PS_PDE4MB = 7,
 
     // PTE
@@ -34,14 +37,22 @@ enum flags {
 typedef uint32_t (*pread_func_t)(void *buf, const uint32_t size, const uint64_t physical_addr);
 
 typedef struct config {
+    // paging mode
     paging_mode_t level;
+    // cr3
     uint32_t root_addr;
+    // function which reads from physical-address
     pread_func_t read_func;
 
-    // paging features
+    // page-size extensions for 32-bit paging
     bool pse;
+    // page-size extensions with 40-bit physical-address extension
     bool pse36;
+    // page-attribute table
     bool pat;
+    // execute disable
+    bool nxe;
+    // physical-address width supported by the processor
     uint8_t maxphyaddr;
 } config_t;
 
@@ -54,6 +65,6 @@ typedef struct config {
 // read_func - функция для чтения физической памяти (см. объявление выше)
 // функция возвращает успешность трансляции: 0 - успешно, не 0 - ошибки
 // phys_addr - выходной оттранслированный физический адрес
-int
+error_t
 va2pa(uint32_t virt_addr, const config_t *cfg, uint64_t *phys_addr);
 

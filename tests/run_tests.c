@@ -6,7 +6,7 @@
 #include "utils.h"
 
 bool
-test_get_mask() {
+test_comp_mask() {
     typedef struct {
         uint8_t l;
         uint8_t r;
@@ -102,7 +102,7 @@ print_binary(uint32_t number) {
 int
 main() {
     bool ok = true;
-    ok &= test_get_mask();
+    ok &= test_comp_mask();
     ok &= test_va2pa();
 
     if (ok) {
