@@ -6,7 +6,9 @@
 error_t
 va2pa_pae(const uint32_t virt_addr,
           const config_t *const cfg,
-          uint64_t *const phys_addr) {
+          uint64_t *const phys_addr,
+          uint32_t *page_fault) {
+    bool is_supervisor_addr = false;
     //---------------------------------------------------------
     uint32_t pdpte_addr = 0;
     // TODO: not sure, maybe I should add it with cr3
@@ -21,7 +23,7 @@ va2pa_pae(const uint32_t virt_addr,
     // and there is no mapping for the 1-GByte region controlled by PDPTEi.
     // A reference using a linear address in this region causes a page-fault exception
     if (!check_bit(pdpte, 0)) {
-        return NO_TRANSLATION;
+        return PAGE_FAULT;
     }
     //---------------------------------------------------------
     // If the P flag of PDPTEi is 1, 4-KByte naturally aligned page directory
@@ -40,7 +42,7 @@ va2pa_pae(const uint32_t virt_addr,
         return READ_FAULT;
     }
     if (!check_bit(pde, 0)) {
-        return NO_TRANSLATION;
+        return PAGE_FAULT;
     }
     uint64_t pde_reserved_mask = 0;
     // If the P flag (bit 0) of a PDE bits 62:MAXPHYADDR are reserved.
@@ -61,7 +63,10 @@ va2pa_pae(const uint32_t virt_addr,
     }
     // check that none of the reserved bits has been set
     if (pde & pde_reserved_mask) {
-        return NO_TRANSLATION;
+        return PAGE_FAULT;
+    }
+    if (!check_bit(pde, 2)) {
+        is_supervisor_addr = true;
     }
     //---------------------------------------------------------
     // If the PDE’s PS flag is 1, the PDE maps a 2-MByte page
@@ -74,7 +79,7 @@ va2pa_pae(const uint32_t virt_addr,
         // Bits 20:0 are from the original linear address
         *phys_addr |= virt_addr & comp_mask(20, 0);
 
-        return SUCCESS;
+        return check_access(is_supervisor_addr, cfg, page_fault);
     }
 
     // If the PDE’s PS flag is 0, a 4-KByte naturally aligned page table
@@ -92,7 +97,7 @@ va2pa_pae(const uint32_t virt_addr,
         return READ_FAULT;
     }
     if (!check_bit(pte, 0)) {
-        return NO_TRANSLATION;
+        return PAGE_FAULT;
     }
     uint64_t pte_reserved_mask = 0;
     // If the P flag (bit 0) of a PTE is 1, bits 62:MAXPHYADDR are reserved
@@ -105,7 +110,10 @@ va2pa_pae(const uint32_t virt_addr,
         pte_reserved_mask |= comp_mask(7, 7);
     }
     if (pte & pte_reserved_mask) {
-        return NO_TRANSLATION;
+        return PAGE_FAULT;
+    }
+    if (!check_bit(pte, 2)) {
+        is_supervisor_addr = true;
     }
     //---------------------------------------------------------
     *phys_addr = 0;
@@ -116,5 +124,5 @@ va2pa_pae(const uint32_t virt_addr,
     //Bits 11:0 are from the original linear address
     *phys_addr |= virt_addr & comp_mask(11, 0);
 
-    return SUCCESS;
+    return check_access(is_supervisor_addr, cfg, page_fault);
 }

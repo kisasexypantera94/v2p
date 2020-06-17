@@ -11,13 +11,14 @@ static const uint8_t PAGE_SHIFT = 12;
 error_t
 va2pa(const uint32_t virt_addr,
       const config_t *const cfg,
-      uint64_t *const phys_addr) {
+      uint64_t *const phys_addr,
+      uint32_t *page_fault) {
     switch (cfg->level) {
         case LEGACY: {
-            return va2pa_legacy(virt_addr, cfg, phys_addr);
+            return va2pa_legacy(virt_addr, cfg, phys_addr, page_fault);
         }
         case PAE: {
-            return va2pa_pae(virt_addr, cfg, phys_addr);
+            return va2pa_pae(virt_addr, cfg, phys_addr, page_fault);
         }
         default:
             return INVALID_TRANSLATION_TYPE;

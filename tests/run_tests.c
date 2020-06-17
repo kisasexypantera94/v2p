@@ -59,12 +59,12 @@ test_va2pa() {
             {
                     123456789,
                     {
-                            LEGACY,
-                            777777777,
-                            mock_read_func,
-                            false,
-                            false,
-                            true,
+                            .level=LEGACY,
+                            .root_addr=777777777,
+                            .read_func=mock_read_func,
+                            .pat=true,
+                            .supervisor=true,
+                            .maxphyaddr=52,
                     },
                     0b101110010110111111110100010101,
                     SUCCESS
@@ -75,7 +75,8 @@ test_va2pa() {
     bool ok = true;
     for (int i = 0; i < n; ++i) {
         uint64_t phys = 0;
-        error_t err = va2pa(t[i].virt_addr, &t[i].cfg, &phys);
+        uint32_t page_fault = 0;
+        error_t err = va2pa(t[i].virt_addr, &t[i].cfg, &phys, &page_fault);
         if (err != t[i].want_err) {
             printf("wrong return code for virt_addr=%u, root_addr=%u, level=%d\ngot:  %d\nwant: %d\n\n",
                    t[i].virt_addr, t[i].cfg.root_addr, t[i].cfg.level, err, t[i].want_err);

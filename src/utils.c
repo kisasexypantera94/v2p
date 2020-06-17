@@ -27,6 +27,26 @@ min(uint8_t a, uint8_t b) {
     return a < b ? a : b;
 }
 
+error_t
+check_access(bool is_supervisor_addr,
+             const config_t *const cfg,
+             uint32_t *page_fault) {
+    // if supervisor-mode access
+    if (cfg->supervisor) {
+        // If CR4.SMAP=1 and EFLAGS.AC=0 or the access is implicit,
+        // data may not be read from any user-mode address
+        if (!is_supervisor_addr && cfg->smap && !cfg->ac) {
+            // TODO: set page_fault
+            return PAGE_FAULT;
+        }
+    } else if (is_supervisor_addr) {
+        // TODO: set page_fault
+        return PAGE_FAULT;
+    }
+
+    return SUCCESS;
+}
+
 void
 get_features(bool *pat, uint8_t *maxphyaddr) {
     uint32_t eax;

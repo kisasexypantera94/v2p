@@ -2,10 +2,13 @@
 #include "utils.h"
 
 // CR3 -> PDE -> PTE -> PHYS (4KB pages)
+// CR3 -> PDE -> PHYS (4MB pages)
 error_t
 va2pa_legacy(const uint32_t virt_addr,
              const config_t *const cfg,
-             uint64_t *const phys_addr) {
+             uint64_t *const phys_addr,
+             uint32_t *page_fault) {
+    bool is_supervisor_addr = false;
     //---------------------------------------------------------
     uint32_t pde_addr = 0;
 
@@ -21,7 +24,7 @@ va2pa_legacy(const uint32_t virt_addr,
         return READ_FAULT;
     }
     if (!check_bit(pde, P_PDE4KB)) {
-        return NO_TRANSLATION;
+        return PAGE_FAULT;
     }
 
     // Form PDE reserved mask
@@ -47,7 +50,11 @@ va2pa_legacy(const uint32_t virt_addr,
     }
     // Check that none of the reserved bits has been set
     if (pde & pde_reserved_mask) {
-        return NO_TRANSLATION;
+        // TODO: set page_fault
+        return PAGE_FAULT;
+    }
+    if (!check_bit(pde, 2)) {
+        is_supervisor_addr = true;
     }
     //---------------------------------------------------------
     // If CR4.PSE = 1 and the PDE’s PS flag is 1, the PDE maps a 4-MByte page
@@ -64,7 +71,7 @@ va2pa_legacy(const uint32_t virt_addr,
         // Bits 21:0 are from the original linear address.
         *phys_addr |= virt_addr & comp_mask(21, 0);
 
-        return SUCCESS;
+        return check_access(is_supervisor_addr, cfg, page_fault);
     }
 
     uint32_t pte_addr = 0;
@@ -81,14 +88,19 @@ va2pa_legacy(const uint32_t virt_addr,
         return READ_FAULT;
     }
     if (!check_bit(pte, P_PTE)) {
-        return NO_TRANSLATION;
+        // TODO: set page_fault
+        return PAGE_FAULT;
     }
     // If the PAT is not supported
     if (!cfg->pat) {
         // If the P flag of a PTE is 1, bit 7 is reserved
         if (check_bit(pte, PAT_PTE)) {
-            return NO_TRANSLATION;
+            // TODO: set page_fault
+            return PAGE_FAULT;
         }
+    }
+    if (!check_bit(pte, 2)) {
+        is_supervisor_addr = true;
     }
     //---------------------------------------------------------
     *phys_addr = 0;
@@ -99,6 +111,6 @@ va2pa_legacy(const uint32_t virt_addr,
     // Bits 11:0 are from the original linear address
     *phys_addr |= virt_addr & comp_mask(11, 0);
 
-    return SUCCESS;
+    return check_access(is_supervisor_addr, cfg, page_fault);
 }
 

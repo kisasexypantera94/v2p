@@ -1,5 +1,10 @@
 # v2p
 
+# Features
+* 32-Bit Paging (Legacy)
+* PAE Paging
+* TODO: IA-32e Paging
+
 # Building
 ```
 $ mkdir build
