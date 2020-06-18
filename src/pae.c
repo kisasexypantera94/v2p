@@ -22,6 +22,7 @@ va2pa_pae(const uint32_t virt_addr,
     // and there is no mapping for the 1-GByte region controlled by PDPTEi.
     // A reference using a linear address in this region causes a page-fault exception
     if (!check_bit(pdpte, 0)) {
+        *page_fault |= 0U;
         return PAGE_FAULT;
     }
     //---------------------------------------------------------
@@ -41,6 +42,7 @@ va2pa_pae(const uint32_t virt_addr,
         return READ_FAULT;
     }
     if (!check_bit(pde, 0)) {
+        *page_fault |= 0U;
         return PAGE_FAULT;
     }
     uint64_t pde_reserved_mask = 0;
@@ -62,6 +64,7 @@ va2pa_pae(const uint32_t virt_addr,
     }
     // check that none of the reserved bits has been set
     if (pde & pde_reserved_mask) {
+        *page_fault |= comp_mask(3, 3);
         return PAGE_FAULT;
     }
     //---------------------------------------------------------
@@ -93,6 +96,7 @@ va2pa_pae(const uint32_t virt_addr,
         return READ_FAULT;
     }
     if (!check_bit(pte, 0)) {
+        *page_fault |= 0U;
         return PAGE_FAULT;
     }
     uint64_t pte_reserved_mask = 0;
@@ -106,6 +110,7 @@ va2pa_pae(const uint32_t virt_addr,
         pte_reserved_mask |= comp_mask(7, 7);
     }
     if (pte & pte_reserved_mask) {
+        *page_fault |= comp_mask(3, 3);
         return PAGE_FAULT;
     }
     //---------------------------------------------------------
