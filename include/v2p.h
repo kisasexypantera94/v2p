@@ -18,21 +18,21 @@ typedef enum error {
 // TODO: move to legacy.c/pae.c
 enum flags {
     // PDE
-    P_PDE4KB = 0,
-    P_PDE2MB = 0,
-    P_PDE4MB = 0,
-    PS_PDE4KB = 7,
-    PS_PDE2MB = 7,
-    PS_PDE4MB = 7,
+    P_PDE4KB = 0U,
+    P_PDE2MB = 0U,
+    P_PDE4MB = 0U,
+    PS_PDE4KB = 7U,
+    PS_PDE2MB = 7U,
+    PS_PDE4MB = 7U,
 
     // PTE
-    P_PTE = 0,
-    PAT_PTE = 7,
+    P_PTE = 0U,
+    PAT_PTE = 7U,
 };
 
 // чтение указанного количества байт физической памяти по заданному адресу в указанный буфер
 // функция вернет количество прочитанных байт (меньшее или 0 означает ошибку - выход за пределы памяти)
-typedef uint32_t (*pread_func_t)(void *buf, const uint32_t size, const uint64_t physical_addr);
+typedef int32_t (*pread_func_t)(void *buf, const uint32_t size, const uint64_t physical_addr);
 
 typedef struct config {
     // paging mode

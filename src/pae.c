@@ -8,7 +8,6 @@ va2pa_pae(const uint32_t virt_addr,
           const config_t *const cfg,
           uint64_t *const phys_addr,
           uint32_t *page_fault) {
-    bool is_supervisor_addr = false;
     //---------------------------------------------------------
     uint32_t pdpte_addr = 0;
     // TODO: not sure, maybe I should add it with cr3
@@ -65,9 +64,6 @@ va2pa_pae(const uint32_t virt_addr,
     if (pde & pde_reserved_mask) {
         return PAGE_FAULT;
     }
-    if (!check_bit(pde, 2)) {
-        is_supervisor_addr = true;
-    }
     //---------------------------------------------------------
     // If the PDE’s PS flag is 1, the PDE maps a 2-MByte page
     if (check_bit(pde, 7)) {
@@ -79,7 +75,7 @@ va2pa_pae(const uint32_t virt_addr,
         // Bits 20:0 are from the original linear address
         *phys_addr |= virt_addr & comp_mask(20, 0);
 
-        return check_access(is_supervisor_addr, cfg, page_fault);
+        return SUCCESS;
     }
 
     // If the PDE’s PS flag is 0, a 4-KByte naturally aligned page table
@@ -112,9 +108,6 @@ va2pa_pae(const uint32_t virt_addr,
     if (pte & pte_reserved_mask) {
         return PAGE_FAULT;
     }
-    if (!check_bit(pte, 2)) {
-        is_supervisor_addr = true;
-    }
     //---------------------------------------------------------
     *phys_addr = 0;
 
@@ -124,5 +117,5 @@ va2pa_pae(const uint32_t virt_addr,
     //Bits 11:0 are from the original linear address
     *phys_addr |= virt_addr & comp_mask(11, 0);
 
-    return check_access(is_supervisor_addr, cfg, page_fault);
+    return SUCCESS;
 }

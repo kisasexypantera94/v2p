@@ -15,5 +15,12 @@ target_include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
+add_custom_command(OUTPUT v2p_single.h
+        COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/gen_header_only.sh
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/)
+add_custom_target(
+        v2p_single ALL
+        DEPENDS v2p_single.h
+)
 
 add_subdirectory(tests)
