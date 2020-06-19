@@ -298,10 +298,12 @@ test_va2pa() {
         if (err != t[i].want_err) {
             printf("wrong return code for test '%s'\ngot:  %d\nwant: %d\n\n",
                    t[i].name, err, t[i].want_err);
+            ok = false;
         }
         if (err == PAGE_FAULT && page_fault != t[i].want_page_fault) {
             printf("wrong page fault for test '%s'\ngot:  %d\nwant: %d\n\n",
                    t[i].name, page_fault, t[i].want_page_fault);
+            ok = false;
         }
         if (phys != t[i].want_phys) {
             printf("wrong returned physaddr for test '%s'\ngot:  %llu\nwant: %llu\n\n",
