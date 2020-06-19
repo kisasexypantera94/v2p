@@ -24,3 +24,4 @@ add_custom_target(
 )
 
 add_subdirectory(tests)
+add_subdirectory(examples)
