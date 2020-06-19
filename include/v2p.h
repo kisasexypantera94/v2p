@@ -15,6 +15,11 @@ typedef enum error {
     INVALID_TRANSLATION_TYPE = -3,
 } error_t;
 
+typedef enum page_fault {
+    NOT_PRESENT = 0,
+    RESERVED_BIT_VIOLATION = (1U << 3U),
+} page_fault_t;
+
 // TODO: move to legacy.c/pae.c
 enum flags {
     // PDE
@@ -79,11 +84,10 @@ typedef struct config {
 // функция трансляции виртуального адреса в физический:
 //
 // virt_addr - виртуальный адрес подлежащий трансляции
-// level - количество уровней трансляции 2 или 3 (соответствуют legacy и PAE трансляциям в x86)
-// root_addr - физический адрес корня дерева трансляции (соответствует регистру CR3)
-// read_func - функция для чтения физической памяти (см. объявление выше)
+// cfg - конфигурация трансляции
 // функция возвращает успешность трансляции: 0 - успешно, не 0 - ошибки
 // phys_addr - выходной оттранслированный физический адрес
+// page_fault - код page_fault исключения
 error_t
 va2pa(uint32_t virt_addr, const config_t *cfg, uint64_t *phys_addr, uint32_t *page_fault);
 

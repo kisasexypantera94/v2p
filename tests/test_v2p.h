@@ -27,7 +27,7 @@ test_va2pa() {
         int32_t read_return[3];
         uint64_t want_phys;
         error_t want_err;
-        error_t want_page_fault;
+        page_fault_t want_page_fault;
     } test_case;
 
     test_case t[] = {
@@ -78,7 +78,7 @@ test_va2pa() {
                     {sizeof(uint64_t), sizeof(uint64_t)},
                     0,
                     PAGE_FAULT,
-                    0
+                    NOT_PRESENT,
             },
             {
                     "legacy read fault",
@@ -109,7 +109,7 @@ test_va2pa() {
                     {sizeof(uint64_t), sizeof(uint64_t)},
                     0,
                     PAGE_FAULT,
-                    0,
+                    NOT_PRESENT,
             },
             {
                     "pse36 on, not present",
@@ -127,7 +127,7 @@ test_va2pa() {
                     {sizeof(uint64_t), sizeof(uint64_t)},
                     0,
                     PAGE_FAULT,
-                    comp_mask(3, 3),
+                    RESERVED_BIT_VIOLATION,
             },
             {
                     "pat off, set reserved, pde, 12",
@@ -147,7 +147,7 @@ test_va2pa() {
                     {sizeof(uint64_t), sizeof(uint64_t)},
                     0,
                     PAGE_FAULT,
-                    comp_mask(3, 3),
+                    RESERVED_BIT_VIOLATION,
             },
             {
                     "ok 4mb",
@@ -198,7 +198,7 @@ test_va2pa() {
                     {sizeof(uint64_t), sizeof(uint64_t)},
                     0,
                     PAGE_FAULT,
-                    comp_mask(3, 3),
+                    RESERVED_BIT_VIOLATION,
             },
             {
                     "pte not present",
